@@ -3,6 +3,7 @@ package com.logitrack.controllers;
 import com.logitrack.entities.Order;
 import com.logitrack.entities.OrderLine;
 import com.logitrack.entities.OrderStatus;
+import com.logitrack.entities.Product;
 import com.logitrack.services.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -58,5 +59,14 @@ public class OrderController {
     @GetMapping("/count")
     public ResponseEntity<Integer> getTotalOrdersCount() {
         return ResponseEntity.ok(orderService.getTotalOrdersCount());
+    }
+
+    @GetMapping("/top-product")
+    public ResponseEntity<Product> getTopSellingProduct() {
+        Product topProduct = orderService.getTopSellingProduct();
+        if (topProduct == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(topProduct);
     }
 }

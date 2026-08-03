@@ -16,7 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findByPriceLessThanEqual(Double price);
 
     @Query("SELECT p FROM Product p WHERE p.stockAmount < :seuil")
-    List<Product> findProductsStockFaible(@Param("seuil") int seuil);
+    List<Product> findProductsLowStock(@Param("seuil") int seuil);
 
     @Query("SELECT ol.product FROM OrderLine ol GROUP BY ol.product ORDER BY SUM(ol.quantite) DESC LIMIT 1")
     Product findTopProduct();

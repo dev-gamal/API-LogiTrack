@@ -42,6 +42,6 @@ public class ProductService {
     }
 
     public List<Product> getLowStockProducts(int threshold) {
-        return productRepository.findProductsStockFaible(threshold);
+        return productRepository.findProductsLowStock(threshold);
     }
 }
