@@ -1,13 +1,18 @@
 package com.logitrack.controllers;
 
-import com.logitrack.entities.Client;
+import com.logitrack.dto.request.ClientRequestDTO;
+import com.logitrack.dto.response.ClientResponseDTO;
 import com.logitrack.services.ClientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/clients")
@@ -17,22 +22,37 @@ public class ClientController {
     private final ClientService clientService;
 
     @PostMapping
-    public ResponseEntity<Client> addClient(@RequestBody Client client) {
-        Client newClient = clientService.addClient(client);
-        return new ResponseEntity<>(newClient, HttpStatus.CREATED);
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ClientResponseDTO> addClient(@Valid @RequestBody ClientRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(clientService.addClient(request));
     }
 
     @GetMapping
-    public ResponseEntity<List<Client>> getAllClients() {
-        return ResponseEntity.ok(clientService.getAllClients());
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    public ResponseEntity<Page<ClientResponseDTO>> getAllClients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(clientService.getAllClients(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Client> getClientById(@PathVariable int id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    public ResponseEntity<ClientResponseDTO> getClientById(@PathVariable int id) {
         return ResponseEntity.ok(clientService.getClientById(id));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable int id, @Valid @RequestBody ClientRequestDTO request) {
+        return ResponseEntity.ok(clientService.updateClient(id, request));
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteClient(@PathVariable int id) {
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();
