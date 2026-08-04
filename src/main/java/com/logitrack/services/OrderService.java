@@ -1,15 +1,26 @@
 package com.logitrack.services;
 
+import com.logitrack.dto.request.OrderLineRequestDTO;
+import com.logitrack.dto.response.OrderLineResponseDTO;
+import com.logitrack.dto.response.OrderResponseDTO;
+import com.logitrack.dto.response.ProductResponseDTO;
 import com.logitrack.entities.*;
+import com.logitrack.exception.ResourceNotFoundException;
+import com.logitrack.mapper.OrderLineMapper;
+import com.logitrack.mapper.OrderMapper;
+import com.logitrack.mapper.ProductMapper;
 import com.logitrack.repositories.ClientRepository;
 import com.logitrack.repositories.OrderLineRepository;
 import com.logitrack.repositories.OrderRepository;
 import com.logitrack.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,70 +30,81 @@ public class OrderService {
     private final ClientRepository clientRepository;
     private final ProductRepository productRepository;
     private final OrderLineRepository orderLineRepository;
+    private final OrderMapper orderMapper;
+    private final OrderLineMapper orderLineMapper;
+    private final ProductMapper productMapper;
 
     @Transactional
-    public Order createOrder(int clientId) {
+    public OrderResponseDTO createOrder(int clientId) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException("Client non trouvé avec l'ID : " + clientId));
 
         Order order = new Order();
         order.setClient(client);
         order.setStatut(OrderStatus.PENDING);
 
-        return orderRepository.save(order);
+        order = orderRepository.save(order);
+        return orderMapper.toResponseDTO(order);
     }
 
-
-    // OrderLineService
     @Transactional
-    public OrderLine addProductToOrder(int orderId, int productId, int quantite) {
+    public OrderLineResponseDTO addProductToOrder(int orderId, OrderLineRequestDTO request) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + orderId));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Produit non trouvé avec l'ID : " + request.getProductId()));
 
-        if (product.getStockAmount() < quantite) {
-            throw new RuntimeException("Stock insuffisant pour le produit : " + product.getName());
+        if (product.getStockAmount() < request.getQuantite()) {
+            throw new IllegalArgumentException("Stock insuffisant pour le produit : " + product.getName());
         }
 
-        product.setStockAmount(product.getStockAmount() - quantite);
+        product.setStockAmount(product.getStockAmount() - request.getQuantite());
         productRepository.save(product);
 
         OrderLine orderLine = new OrderLine();
         orderLine.setOrder(order);
         orderLine.setProduct(product);
-        orderLine.setQuantite(quantite);
+        orderLine.setQuantite(request.getQuantite());
 
-        return orderLineRepository.save(orderLine);
+        orderLine = orderLineRepository.save(orderLine);
+        return orderLineMapper.toResponseDTO(orderLine);
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable).map(orderMapper::toResponseDTO);
     }
 
-    public Order getOrderById(int id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
+    public OrderResponseDTO getOrderById(int id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + id));
+        return orderMapper.toResponseDTO(order);
     }
 
     @Transactional
-    public Order updateOrderStatus(int orderId, OrderStatus newStatus) {
-        Order order = getOrderById(orderId);
+    public OrderResponseDTO updateOrderStatus(int orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + orderId));
         order.setStatut(newStatus);
-        return orderRepository.save(order);
+        order = orderRepository.save(order);
+        return orderMapper.toResponseDTO(order);
     }
 
-    public List<Order> getOrdersByClientId(int clientId) {
-        return orderRepository.findByClientId(clientId);
+    public List<OrderResponseDTO> getOrdersByClientId(int clientId) {
+        return orderRepository.findByClientId(clientId).stream()
+                .map(orderMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     public int getTotalOrdersCount() {
         return orderRepository.countTotalOrders();
     }
 
-    public Product getTopSellingProduct() {
-        return productRepository.findTopProduct();
+    public ProductResponseDTO getTopSellingProduct() {
+        Product topProduct = productRepository.findTopProduct();
+        if (topProduct == null) {
+            return null;
+        }
+        return productMapper.toResponseDTO(topProduct);
     }
-
 }
