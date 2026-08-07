@@ -10,18 +10,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDTO {
-    @NotBlank(message = "Le nom est obligatoire")
+    @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotBlank(message = "Le prénom est obligatoire")
+    @NotBlank(message = "First name is required")
     private String firstName;
 
-    @NotBlank(message = "L'email est obligatoire")
-    @Email(message = "L'email doit être valide")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
 
     private String password;
 
-    @NotBlank(message = "Le rôle est obligatoire")
+    @NotBlank(message = "Role is required")
     private String role;
 }

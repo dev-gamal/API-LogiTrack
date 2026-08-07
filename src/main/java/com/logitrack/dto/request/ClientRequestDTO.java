@@ -10,16 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClientRequestDTO {
-    @NotBlank(message = "Le nom est obligatoire")
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank(message = "L'email est obligatoire")
-    @Email(message = "L'email doit être valide")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
 
-    @NotBlank(message = "Le téléphone est obligatoire")
+    @NotBlank(message = "Phone is required")
     private String phone;
 
-    @NotBlank(message = "La ville est obligatoire")
+    @NotBlank(message = "City is required")
     private String city;
 }

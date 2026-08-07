@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequestDTO {
-    @NotNull(message = "L'ID du client est obligatoire")
+    @NotNull(message = "Client ID is required")
     private Integer clientId;
 }

@@ -12,17 +12,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductRequestDTO {
-    @NotBlank(message = "Le nom du produit est obligatoire")
+    @NotBlank(message = "Product name is required")
     private String name;
 
-    @NotBlank(message = "La catégorie est obligatoire")
+    @NotBlank(message = "Category is required")
     private String category;
 
-    @NotNull(message = "Le prix est obligatoire")
-    @Positive(message = "Le prix doit être positif")
+    @NotNull(message = "Price is required")
+    @Positive(message = "Price must be positive")
     private Double price;
 
-    @NotNull(message = "Le stock est obligatoire")
-    @Min(value = 0, message = "Le stock ne peut pas être négatif")
+    @NotNull(message = "Stock amount is required")
+    @Min(value = 0, message = "Stock mustn't be negative")
     private Integer stockAmount;
 }

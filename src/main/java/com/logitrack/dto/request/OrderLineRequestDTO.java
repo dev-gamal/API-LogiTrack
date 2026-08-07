@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderLineRequestDTO {
-    @NotNull(message = "L'ID du produit est obligatoire")
+    @NotNull(message = "Product ID is required")
     private Integer productId;
 
-    @NotNull(message = "La quantité est obligatoire")
-    @Min(value = 1, message = "La quantité doit être au moins 1")
+    @NotNull(message = "Quantity is required")
+    @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantite;
 }
