@@ -1,6 +1,7 @@
 package com.logitrack.controllers;
 
 import com.logitrack.services.OrderLineService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,7 @@ public class OrderLineController {
 
     @GetMapping("/count/{productId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Get total count of a product in all order lines")
     public ResponseEntity<Integer> getTotalCountsOfProduct(@PathVariable int productId) {
         return ResponseEntity.ok(orderLineService.getTotalCountOfProduct(productId));
     }

@@ -3,6 +3,7 @@ package com.logitrack.controllers;
 import com.logitrack.dto.request.ClientRequestDTO;
 import com.logitrack.dto.response.ClientResponseDTO;
 import com.logitrack.services.ClientService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,12 +24,14 @@ public class ClientController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Add a new client")
     public ResponseEntity<ClientResponseDTO> addClient(@Valid @RequestBody ClientRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clientService.addClient(request));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Get all clients")
     public ResponseEntity<Page<ClientResponseDTO>> getAllClients(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,18 +44,21 @@ public class ClientController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Get client by ID")
     public ResponseEntity<ClientResponseDTO> getClientById(@PathVariable int id) {
         return ResponseEntity.ok(clientService.getClientById(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Update client")
     public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable int id, @Valid @RequestBody ClientRequestDTO request) {
         return ResponseEntity.ok(clientService.updateClient(id, request));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete client")
     public ResponseEntity<Void> deleteClient(@PathVariable int id) {
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();

@@ -6,6 +6,7 @@ import com.logitrack.dto.response.OrderResponseDTO;
 import com.logitrack.dto.response.ProductResponseDTO;
 import com.logitrack.entities.OrderStatus;
 import com.logitrack.services.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,12 +29,14 @@ public class OrderController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Create a new order for a client")
     public ResponseEntity<OrderResponseDTO> createOrder(@RequestParam int clientId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(clientId));
     }
 
     @PostMapping("/{orderId}/products")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Add a product to an existing order")
     public ResponseEntity<OrderLineResponseDTO> addProductToOrder(
             @PathVariable int orderId,
             @Valid @RequestBody OrderLineRequestDTO request) {
@@ -42,7 +45,8 @@ public class OrderController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
-    public ResponseEntity<Page<OrderResponseDTO>> getAllOrders(
+    @Operation(summary = "Get all orders")
+        public ResponseEntity<Page<OrderResponseDTO>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -54,12 +58,14 @@ public class OrderController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Get order by ID")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable int id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Update order status")
     public ResponseEntity<OrderResponseDTO> updateOrderStatus(
             @PathVariable int id,
             @RequestParam OrderStatus status) {
@@ -68,6 +74,7 @@ public class OrderController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete order")
     public ResponseEntity<Void> deleteOrder(@PathVariable int id) {
         // For now, just return no content — can add service method later
         return ResponseEntity.noContent().build();
@@ -75,18 +82,21 @@ public class OrderController {
 
     @GetMapping("/client/{clientId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
+    @Operation(summary = "Get orders by client")
     public ResponseEntity<List<OrderResponseDTO>> getOrdersByClient(@PathVariable int clientId) {
         return ResponseEntity.ok(orderService.getOrdersByClientId(clientId));
     }
 
     @GetMapping("/count")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Get total orders count")
     public ResponseEntity<Integer> getTotalOrdersCount() {
         return ResponseEntity.ok(orderService.getTotalOrdersCount());
     }
 
     @GetMapping("/top-product")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Get top selling product")
     public ResponseEntity<ProductResponseDTO> getTopSellingProduct() {
         ProductResponseDTO topProduct = orderService.getTopSellingProduct();
         if (topProduct == null) {
