@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.logitrack.controllers")
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
