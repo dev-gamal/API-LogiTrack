@@ -9,6 +9,7 @@ import com.logitrack.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +28,23 @@ public class ProductService {
         return productMapper.toResponseDTO(product);
     }
 
-    public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toResponseDTO);
+    public Page<ProductResponseDTO> getAllProducts(Pageable pageable, String category, Double maxPrice, Boolean lowStock) {
+        Specification<Product> spec = Specification.where(null);
+
+        if (category != null && !category.isBlank()) {
+            String searchTerm = "%" + category.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("category")), searchTerm));
+        }
+
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+        }
+
+        if (Boolean.TRUE.equals(lowStock)) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("stockAmount"), 5));
+        }
+
+        return productRepository.findAll(spec, pageable).map(productMapper::toResponseDTO);
     }
 
     public ProductResponseDTO getProductById(int id) {

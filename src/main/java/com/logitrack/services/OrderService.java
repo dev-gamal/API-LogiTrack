@@ -16,6 +16,7 @@ import com.logitrack.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,8 +72,18 @@ public class OrderService {
         return orderLineMapper.toResponseDTO(orderLine);
     }
 
-    public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
-        return orderRepository.findAll(pageable).map(orderMapper::toResponseDTO);
+    public Page<OrderResponseDTO> getAllOrders(Pageable pageable, OrderStatus statut, Integer clientId) {
+        Specification<Order> spec = Specification.where(null);
+
+        if (statut != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("statut"), statut));
+        }
+
+        if (clientId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("client").get("id"), clientId));
+        }
+
+        return orderRepository.findAll(spec, pageable).map(orderMapper::toResponseDTO);
     }
 
     public OrderResponseDTO getOrderById(int id) {

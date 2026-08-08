@@ -50,10 +50,12 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) OrderStatus statut,
+            @RequestParam(required = false) Integer clientId) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(orderService.getAllOrders(pageable));
+        return ResponseEntity.ok(orderService.getAllOrders(pageable, statut, clientId));
     }
 
     @GetMapping("/{id}")

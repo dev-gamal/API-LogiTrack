@@ -9,6 +9,7 @@ import com.logitrack.repositories.ClientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,8 +25,15 @@ public class ClientService {
         return clientMapper.toResponseDTO(client);
     }
 
-    public Page<ClientResponseDTO> getAllClients(Pageable pageable) {
-        return clientRepository.findAll(pageable).map(clientMapper::toResponseDTO);
+    public Page<ClientResponseDTO> getAllClients(Pageable pageable, String name) {
+        Specification<Client> spec = Specification.where(null);
+
+        if (name != null && !name.isBlank()) {
+            String searchTerm = "%" + name.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")), searchTerm));
+        }
+
+        return clientRepository.findAll(spec, pageable).map(clientMapper::toResponseDTO);
     }
 
     public ClientResponseDTO getClientById(int id) {
