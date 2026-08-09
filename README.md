@@ -47,7 +47,7 @@ src/main/java/com/logitrack/
 
 1. **Cloner le dépôt :**
    ```bash
-   git clone <votre-repo-url>
+   git clone https://github.com/dev-gamal/API-LogiTrack
    cd API-LogiTrack
    ```
 
