@@ -33,7 +33,16 @@ public class JwtUtils {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
+        String rawRole = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        extraClaims.put("role", rawRole);
+        
+        if (userDetails instanceof com.logitrack.entities.User) {
+            com.logitrack.entities.User user = (com.logitrack.entities.User) userDetails;
+            extraClaims.put("id", user.getId());
+            extraClaims.put("firstName", user.getFirstName());
+            extraClaims.put("lastName", user.getLastName());
+        }
+        
         return generateToken(extraClaims, userDetails);
     }
 

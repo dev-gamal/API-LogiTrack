@@ -66,11 +66,6 @@ public class AuthService {
     private AuthResponse buildAuthResponse(User user, String token) {
         return AuthResponse.builder()
                 .token(token)
-                .id(user.getId())
-                .lastName(user.getLastName())
-                .firstName(user.getFirstName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
                 .build();
     }
 }
