@@ -1,5 +1,7 @@
 package com.logitrack.services;
 
+import com.logitrack.client.NotificationClient;
+import com.logitrack.dto.request.NotificationRequestDTO;
 import com.logitrack.dto.request.OrderLineRequestDTO;
 import com.logitrack.dto.response.OrderLineResponseDTO;
 import com.logitrack.dto.response.OrderResponseDTO;
@@ -14,6 +16,7 @@ import com.logitrack.repositories.OrderLineRepository;
 import com.logitrack.repositories.OrderRepository;
 import com.logitrack.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -34,6 +38,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderLineMapper orderLineMapper;
     private final ProductMapper productMapper;
+    private final NotificationClient notificationClient;
 
     @Transactional
     public OrderResponseDTO createOrder(int clientId) {
@@ -45,19 +50,23 @@ public class OrderService {
         order.setStatut(OrderStatus.PENDING);
 
         order = orderRepository.save(order);
+
+        sendNotification("The order #" + order.getId() + " has been created successfully.", "ORDER_CREATED", order.getId());
+
         return orderMapper.toResponseDTO(order);
     }
 
     @Transactional
     public OrderLineResponseDTO addProductToOrder(int orderId, OrderLineRequestDTO request) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID : " + orderId));
 
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Produit non trouvé avec l'ID : " + request.getProductId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID : " + request.getProductId()));
 
         if (product.getStockAmount() < request.getQuantite()) {
-            throw new IllegalArgumentException("Stock insuffisant pour le produit : " + product.getName());
+            log.error("Insufficient stock for the product : {}", product.getName());
+            throw new IllegalArgumentException("insufficient stock for the product : " + product.getName());
         }
 
         product.setStockAmount(product.getStockAmount() - request.getQuantite());
@@ -88,16 +97,23 @@ public class OrderService {
 
     public OrderResponseDTO getOrderById(int id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID : " + id));
         return orderMapper.toResponseDTO(order);
     }
 
     @Transactional
     public OrderResponseDTO updateOrderStatus(int orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'ID : " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID : " + orderId));
         order.setStatut(newStatus);
         order = orderRepository.save(order);
+
+        if (newStatus == OrderStatus.SHIPPED) {
+            sendNotification("The order #" + orderId + " has been shipped.", "ORDER_SHIPPED", orderId);
+        } else if (newStatus == OrderStatus.DELIVERED) {
+            sendNotification("The order #" + orderId + " has been delivered.", "ORDER_DELIVERED", orderId);
+        }
+
         return orderMapper.toResponseDTO(order);
     }
 
@@ -117,5 +133,21 @@ public class OrderService {
             return null;
         }
         return productMapper.toResponseDTO(topProduct);
+    }
+
+    private void sendNotification(String message, String type, int orderId) {
+        try {
+            NotificationRequestDTO request = NotificationRequestDTO.builder()
+                    .message(message)
+                    .type(type)
+                    .orderId((long) orderId)
+                    .build();
+
+            notificationClient.sendNotification(request);
+            log.info("Notification sent successfully for order {}", orderId);
+
+        } catch (Exception e) {
+            log.error("Failed to send notification for order {} : {}", orderId, e.getMessage());
+        }
     }
 }
