@@ -18,6 +18,23 @@ services:
       timeout: 5s
       retries: 5
 
+  notification-db:
+    image: mysql:8.0
+    container_name: notification-db
+    environment:
+      MYSQL_DATABASE: logitrack_notifications_db
+      MYSQL_ROOT_PASSWORD: SpringBoot2026
+    ports:
+      - "3307:3306"
+    networks:
+      - monitoring-network
+    restart: no
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSpringBoot2026" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   logitrack-api:
     build: .
     container_name: logitrack-api
@@ -30,6 +47,24 @@ services:
         condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/logitrack_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=SpringBoot2026
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - NOTIFICATION_SERVICE_URL=http://notification-api:8081
+    restart: unless-stopped
+
+  notification-api:
+    build: ../notification/notification
+    container_name: notification-api
+    ports:
+      - "8081:8081"
+    networks:
+      - monitoring-network
+    depends_on:
+      notification-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://notification-db:3306/logitrack_notifications_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=SpringBoot2026
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
