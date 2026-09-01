@@ -43,7 +43,7 @@ public class OrderService {
     @Transactional
     public OrderResponseDTO createOrder(int clientId) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Client non trouvé avec l'ID : " + clientId));
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with ID : " + clientId));
 
         Order order = new Order();
         order.setClient(client);
